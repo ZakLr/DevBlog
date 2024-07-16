@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                String   @id @default(cuid())
+  role              Role     @default(USER)
+  email             String   @unique
+  name              String?
+  password          String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  blogs             Blog[]
+  pfp               String?
+  comments          Comment[]
+  reportsMade       Report[] @relation("ReportsMade")
+  reportsAgainst    Report[] @relation("ReportsAgainst")
+  bio               String?
+  backgroundImage   String?
+  firstName         String?
+  lastName          String?
+  birthday          DateTime?
+  gender            String?
+  website           String?
+  job               String?
+  commentsLiked     String[]
+  blogsLiked        String[]
+  facebook String?
+  instagram String?
+  linkedin String?
+  totalComments    Int @default(0)
+  totalBlogs       Int @default(0)
+}
+
+model Blog {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User?     @relation(fields: [authorId], references: [id])
+  authorId  String?
+  comments  Comment[]
+  picture   String?
+  likes     Int @default(0)
+  reports   Report[]  @relation("BlogReports")
+  topics    String[]
+}
+
+
+model Comment {
+  id        String    @id @default(cuid())
+  authorId  String   // Add this line
+  author    User?     @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blogId    String
+  blog      Blog?     @relation(fields: [blogId], references: [id])
+  likes     Int @default(0)
+  reports   Report[]  @relation("CommentReports")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], name: "ReportsMade")
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // For reports against blogs
+  blogId    String?
+  blog      Blog?    @relation(fields: [blogId], references: [id], name: "BlogReports")
+  // For reports against comments
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], name: "CommentReports")
+  // For reports against users
+  reportedUserId String?
+  reportedUser   User?    @relation(fields: [reportedUserId], references: [id], name: "ReportsAgainst")
+}
+model passwordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
